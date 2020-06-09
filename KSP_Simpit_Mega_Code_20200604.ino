@@ -89,7 +89,7 @@ Rotary throtRotary = Rotary(THROT_DT, THROT_CLK);
 Rotary sasRotary = Rotary(SAS_DT, SAS_CLK);
 
 void setup() {
-  Serial.begin(230400); // begins the serial connection to the computer through USB
+  Serial.begin(115200); // begins the serial connection to the computer through USB
   pinMode(ROT_X, INPUT); // defines inputs and outputs on Arduino pins
   pinMode(ROT_Y, INPUT);
   pinMode(ROT_Z, INPUT);
@@ -190,7 +190,7 @@ void loop() {
   throt_Counter = constrain(throt_Counter, 0, 32767); // sets upper and lower limits for counter variables for rotary encoders
   sas_Counter = constrain(sas_Counter, 1, 10);
 
-  rot_X_Read = analogRead(ROT_X); // takes a reading for the X-axis; from testing determined X-min = 330, X-mid = 505, X-max = 693
+    int rot_X_Read = analogRead(ROT_X); // takes a reading for the X-axis; from testing determined X-min = 330, X-mid = 505, X-max = 693
   if (rot_X_Read < 510 && rot_X_Read > 500) { // determines if the X-axis pot is in the middle deadzone to eliminate jitter
     rot_X_Mapped = 0;
   }
@@ -201,13 +201,7 @@ void loop() {
     rot_X_Mapped = map(rot_X_Read, 510, 693, 0, 32767); // sets the mapping for the positive portion of the axis
   }
 
-  rot_X_Mapped = constrain(rot_X_Mapped, -32768, 32767); // constrains the mapped value of the X-axis reading to valid results
-  myRotation.mask = 2; // applies the bitmask required to only send roll information to Simpit
-  myRotation.roll = rot_X_Mapped; // applies the X-axis value as the rotation roll value
-  mySimpit.send(ROTATION_MESSAGE, myRotation); // sends the roll value to Simpit
-  delay(10);  
-  
-  rot_Y_Read = analogRead(ROT_Y);
+  int rot_Y_Read = analogRead(ROT_Y);
   if (rot_Y_Read < 518 && rot_Y_Read > 508) {
     rot_Y_Mapped = 0;
   }
@@ -218,13 +212,7 @@ void loop() {
     rot_Y_Mapped = map(rot_Y_Read, 518, 680, 0, 32767);
   }
 
-  rot_Y_Mapped = constrain(rot_Y_Mapped, -32768, 32767);
-  myRotation.mask = 1;
-  myRotation.pitch = rot_Y_Mapped;
-  mySimpit.send(ROTATION_MESSAGE, myRotation);
-  delay(10);
-
-  rot_Z_Read = analogRead(ROT_Z);
+  int rot_Z_Read = analogRead(ROT_Z);
   if (rot_Z_Read < 520 && rot_Z_Read > 510) {
     rot_Z_Mapped = 0;
   }
@@ -235,13 +223,13 @@ void loop() {
     rot_Z_Mapped = map(rot_Z_Read, 520, 733, 0, 32767);
   }
 
-  rot_Z_Mapped = constrain(rot_Z_Mapped, -32768, 32767);
-  myRotation.mask = 4;
+  myRotation.mask = 1|2|4;
+  myRotation.pitch = rot_Y_Mapped;
+  myRotation.roll = rot_X_Mapped; // applies the X-axis value as the rotation roll value
   myRotation.yaw = rot_Z_Mapped;
-  mySimpit.send(ROTATION_MESSAGE, myRotation);
-  delay(10);
-
-  trans_X_Read = analogRead(TRANS_X); // takes a reading for the X-axis; from testing determined X-min = 330, X-mid = 505, X-max = 693
+  mySimpit.send(ROTATION_MESSAGE, myRotation); // sends the rotation value to Simpit
+ 
+  int trans_X_Read = analogRead(TRANS_X); // takes a reading for the X-axis; from testing determined X-min = 330, X-mid = 505, X-max = 693
   if (trans_X_Read < 510 && trans_X_Read > 500) { // determines if the X-axis pot is in the middle deadzone to eliminate jitter
     trans_X_Mapped = 0;
   }
@@ -252,13 +240,7 @@ void loop() {
     trans_X_Mapped = map(trans_X_Read, 510, 693, 0, 32767); // sets the mapping for the positive portion of the axis
   }
 
-  trans_X_Mapped = constrain(trans_X_Mapped, -32768, 32767); // constrains the mapped value of the X-axis reading to valid results
-  myTranslation.mask = 1; // applies the bitmask required to only send X information to Simpit
-  myTranslation.X = trans_X_Mapped; // applies the X-axis value as the X translation value
-  mySimpit.send(TRANSLATION_MESSAGE, myTranslation); // sends the x translation value to Simpit
-  delay(10);  
-  
-  trans_Y_Read = analogRead(TRANS_Y);
+  int trans_Y_Read = analogRead(TRANS_Y);
   if (trans_Y_Read < 518 && trans_Y_Read > 508) {
     trans_Y_Mapped = 0;
   }
@@ -269,13 +251,7 @@ void loop() {
     trans_Y_Mapped = map(trans_Y_Read, 518, 680, 0, 32767);
   }
 
-  trans_Y_Mapped = constrain(trans_Y_Mapped, -32768, 32767);
-  myTranslation.mask = 2;
-  myTranslation.Y = trans_Y_Mapped;
-  mySimpit.send(TRANSLATION_MESSAGE, myTranslation);
-  delay(10);
-
-  trans_Z_Read = analogRead(TRANS_Z);
+  int trans_Z_Read = analogRead(TRANS_Z);
   if (trans_Z_Read < 520 && trans_Z_Read > 510) {
     trans_Z_Mapped = 0;
   }
@@ -285,12 +261,12 @@ void loop() {
   if (trans_Z_Read >= 520) {
     trans_Z_Mapped = map(trans_Z_Read, 520, 733, 0, 32767);
   }
-
-  trans_Z_Mapped = constrain(trans_Z_Mapped, -32768, 32767);
-  myTranslation.mask = 4;
+  
+  myTranslation.mask = 1|2|4;
+  myTranslation.X = trans_X_Mapped; // applies the X-axis value as the X translation value
+  myTranslation.Y = trans_Y_Mapped;
   myTranslation.Z = trans_Z_Mapped;
-  mySimpit.send(TRANSLATION_MESSAGE, myTranslation);
-  delay(10);
+  mySimpit.send(TRANSLATION_MESSAGE, myTranslation); // sends the translation value to Simpit
 
   if (buttonSTAGE.isPressed()) {
     mySimpit.toggleAction(STAGE_ACTION);
